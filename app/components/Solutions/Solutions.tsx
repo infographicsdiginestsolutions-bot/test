@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { Reveal, ParallaxLayer } from '../ScrollEffects';
 
 const solutions = [
   {
@@ -76,95 +77,115 @@ const solutions = [
 ];
 
 export default function Solutions() {
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.2 });
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
+
+  // Background orb parallax
+  const orbY = useTransform(scrollYProgress, [0, 1], ['-20%', '20%']);
+  const orbScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1.2, 0.9]);
 
   return (
-    <section ref={ref} id="solutions" className="relative py-32 overflow-hidden" style={{ background: '#050810' }}>
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-5"
-          style={{ background: 'radial-gradient(circle, #f5a623, transparent 70%)' }} />
-      </div>
+    <section ref={sectionRef} id="solutions" className="relative py-32 overflow-hidden" style={{ background: '#050810' }}>
+      {/* Parallax background orb */}
+      <motion.div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full pointer-events-none"
+        style={{
+          y: orbY,
+          scale: orbScale,
+          background: 'radial-gradient(circle, rgba(245,166,35,0.06), transparent 65%)',
+        }}
+      />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
-        >
-          <span className="inline-block text-xs font-medium text-[#f5a623] tracking-widest uppercase mb-4 glass-warm px-4 py-2 rounded-full">
-            Our Solutions
-          </span>
-          <h2 className="text-4xl md:text-6xl font-bold text-white mt-4 mb-6">
-            Solar for Every <span className="gradient-text">Scale</span>
-          </h2>
-          <p className="text-lg text-white/40 max-w-2xl mx-auto">
-            From rooftop systems to industrial megaprojects — we engineer solar solutions that deliver measurable results.
-          </p>
-        </motion.div>
+        {/* Header with parallax */}
+        <ParallaxLayer speed={0.15} className="text-center mb-20">
+          <Reveal direction="up">
+            <span className="inline-block text-xs font-medium text-[#f5a623] tracking-widest uppercase mb-4 glass-warm px-4 py-2 rounded-full">
+              Our Solutions
+            </span>
+            <h2 className="text-4xl md:text-6xl font-bold text-white mt-4 mb-6">
+              Solar for Every <span className="gradient-text">Scale</span>
+            </h2>
+            <p className="text-lg text-white/40 max-w-2xl mx-auto">
+              From rooftop systems to industrial megaprojects — we engineer solar solutions that deliver measurable results.
+            </p>
+          </Reveal>
+        </ParallaxLayer>
 
-        {/* Cards */}
+        {/* Cards with staggered scroll-reveal */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {solutions.map((solution, i) => (
-            <motion.div
-              key={solution.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.7, delay: i * 0.15 }}
-              whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className={`relative group rounded-3xl p-8 border cursor-pointer overflow-hidden ${solution.border} bg-gradient-to-br ${solution.color}`}
-              style={{ backdropFilter: 'blur(20px)' }}
-            >
-              {solution.featured && (
-                <div className="absolute top-5 right-5 gradient-bg text-black text-xs font-bold px-3 py-1 rounded-full">
-                  Most Popular
-                </div>
-              )}
-
-              {/* Hover shimmer */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 shimmer rounded-3xl" />
-
-              {/* Icon */}
+            <Reveal key={solution.id} direction="up" delay={i * 0.12} amount={0.1}>
               <motion.div
-                whileHover={{ rotate: 5, scale: 1.1 }}
-                className="mb-6 inline-block p-3 rounded-2xl glass border border-white/10"
+                whileHover={{ y: -12, transition: { duration: 0.35, ease: 'easeOut' } }}
+                className={`relative group rounded-3xl p-8 border cursor-pointer overflow-hidden h-full ${solution.border} bg-gradient-to-br ${solution.color}`}
+                style={{ backdropFilter: 'blur(20px)' }}
+                data-magnetic
               >
-                {solution.icon}
+                {solution.featured && (
+                  <div className="absolute top-5 right-5 gradient-bg text-black text-xs font-bold px-3 py-1 rounded-full">
+                    Most Popular
+                  </div>
+                )}
+
+                {/* Mouse-follow inner glow */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl"
+                  style={{ background: 'radial-gradient(circle at 50% 0%, rgba(245,166,35,0.12), transparent 60%)' }} />
+
+                {/* Shimmer sweep */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 shimmer rounded-3xl" />
+
+                {/* Icon with spin-on-hover */}
+                <motion.div
+                  whileHover={{ rotate: 8, scale: 1.15 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                  className="mb-6 inline-block p-3 rounded-2xl glass border border-white/10"
+                >
+                  {solution.icon}
+                </motion.div>
+
+                <div className="text-xs text-[#f5a623]/70 uppercase tracking-widest mb-2">{solution.subtitle}</div>
+                <h3 className="text-2xl font-bold text-white mb-4">{solution.title}</h3>
+                <p className="text-white/50 text-sm leading-relaxed mb-6">{solution.description}</p>
+
+                <ul className="space-y-3 mb-8">
+                  {solution.features.map((f, fi) => (
+                    <motion.li
+                      key={f}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + fi * 0.08 }}
+                      viewport={{ once: true }}
+                      className="flex items-center gap-3 text-sm text-white/60"
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.4, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: fi * 0.5 }}
+                        className="w-1.5 h-1.5 rounded-full bg-[#f5a623] flex-shrink-0"
+                      />
+                      {f}
+                    </motion.li>
+                  ))}
+                </ul>
+
+                <div className="pt-4 border-t border-white/5">
+                  <div className="text-xs text-white/30 mb-1">Performance</div>
+                  <div className="text-sm font-semibold gradient-text">{solution.stat}</div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`mt-6 w-full py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
+                    solution.featured
+                      ? 'gradient-bg text-black solar-glow-sm'
+                      : 'glass border border-white/10 text-white hover:border-white/20'
+                  }`}
+                >
+                  Learn More →
+                </motion.button>
               </motion.div>
-
-              <div className="text-xs text-[#f5a623]/70 uppercase tracking-widest mb-2">{solution.subtitle}</div>
-              <h3 className="text-2xl font-bold text-white mb-4">{solution.title}</h3>
-              <p className="text-white/50 text-sm leading-relaxed mb-6">{solution.description}</p>
-
-              <ul className="space-y-3 mb-8">
-                {solution.features.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-white/60">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#f5a623] flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-4 border-t border-white/5">
-                <div className="text-xs text-white/30 mb-1">Performance</div>
-                <div className="text-sm font-semibold gradient-text">{solution.stat}</div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`mt-6 w-full py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
-                  solution.featured
-                    ? 'gradient-bg text-black solar-glow-sm'
-                    : 'glass border border-white/10 text-white hover:border-white/20'
-                }`}
-              >
-                Learn More →
-              </motion.button>
-            </motion.div>
+            </Reveal>
           ))}
         </div>
       </div>

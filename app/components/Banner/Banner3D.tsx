@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { Reveal, ParallaxLayer } from '../ScrollEffects';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -94,28 +95,26 @@ export default function Banner3D() {
   const [hovered, setHovered] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const canvasY = useTransform(scrollYProgress, [0, 1], ['-5%', '5%']);
 
   return (
     <section ref={ref} className="relative py-24 overflow-hidden" style={{ background: 'linear-gradient(180deg, #050810, #0a0f1e, #050810)' }}>
       <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
-        >
-          <span className="inline-block text-xs font-medium text-[#f5a623] tracking-widest uppercase mb-4 glass-warm px-4 py-2 rounded-full">
-            Advanced Technology
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mt-2">
-            Next-Generation <span className="gradient-text">Solar Infrastructure</span>
-          </h2>
-        </motion.div>
+        <ParallaxLayer speed={0.1} className="text-center mb-12">
+          <Reveal direction="up">
+            <span className="inline-block text-xs font-medium text-[#f5a623] tracking-widest uppercase mb-4 glass-warm px-4 py-2 rounded-full">
+              Advanced Technology
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mt-2">
+              Next-Generation <span className="gradient-text">Solar Infrastructure</span>
+            </h2>
+          </Reveal>
+        </ParallaxLayer>
 
+        <Reveal direction="scale" delay={0.1}>
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={inView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 1, delay: 0.2 }}
+          style={{ y: canvasY }}
           className="relative h-[400px] rounded-3xl overflow-hidden glass border border-white/5 cursor-pointer"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
@@ -143,6 +142,7 @@ export default function Banner3D() {
             Hover to interact
           </div>
         </motion.div>
+        </Reveal>
       </div>
     </section>
   );
